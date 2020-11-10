@@ -1,0 +1,41 @@
+# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: 京东东东农场
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '20 23,4,10 * * *'
+  watch:
+    types: started
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js 10.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10.x
+      - name: npm install
+        run: |
+          npm install
+          npm install request
+          npm install --save got
+          npm install tough-cookie
+      - name: '京东东东农场'
+        env: 
+            COOKIE: ${{secrets.JD_COOKIE}}
+            TG_BOT_TOKEN :  ${{secrets.TG_BOT_TOKEN}}
+            TG_USER_ID :  ${{secrets.TG_USER_ID}}
+            REMOTE_URL: https://raw.githubusercontent.com/lxk0301/jd_scripts/master/jd_fruit.js
+            CUSTOM_REPLACE: '[{key : /await notify\.sendNotify.+/g,value : ""}]'
+            MULT_CUSTOM_REPLACE: '[
+                                   [{key : /const \$.+/,value : "const $ = new Env(''东东农场-ZGX'')"},{key : /const jdFruitShareCodes.+/,value : "const jdFruitShareCodes = [`49388ab5f2654460be8a4a44cfde6a92@1d5c06e54d7445fd974322a30e5e0760@4c751756e1ba497e9c98eccb1369b73a@ba1ba118597c4caa9d079842963cdc7f`]"}]
+                                  ]'
+        run: |
+          node 'scripts/remote/runRemoteScripts.js'
